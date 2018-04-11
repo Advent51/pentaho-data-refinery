@@ -38,6 +38,8 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 
+import javax.ws.rs.ext.Providers;
+
 public class ModelServerAction {
 
   protected BiServerConnection biServerConnection;
@@ -56,9 +58,16 @@ public class ModelServerAction {
 
     // initialize
     if ( this._client == null ) {
-      ClientConfig clientConfig = new DefaultClientConfig();
-      clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
-      this._client = Client.create( clientConfig );
+      ClassLoader orig = Thread.currentThread().getContextClassLoader();
+      try {
+        Thread.currentThread().setContextClassLoader( Providers.class.getClassLoader() );
+
+        ClientConfig clientConfig = new DefaultClientConfig();
+        clientConfig.getFeatures().put( JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE );
+        this._client = Client.create( clientConfig );
+      } finally {
+        Thread.currentThread().setContextClassLoader( orig );
+      }
     }
 
     return this._client;
